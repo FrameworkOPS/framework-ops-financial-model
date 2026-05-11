@@ -153,7 +153,20 @@ export default function App() {
                 ? <GenericForm inputs={inputs} onChange={handleChange} />
                 : <HomeServicesForm inputs={inputs} onChange={handleChange} />
               }
-              {!results && (
+              {results ? (
+                <button
+                  onClick={() => runAnalysis(industry, inputs, results)}
+                  disabled={aiLoading}
+                  className="w-full mt-5 py-2.5 rounded-lg text-sm font-semibold transition-colors"
+                  style={{
+                    background: aiLoading ? '#334155' : '#10B981',
+                    color: aiLoading ? '#64748b' : '#061220',
+                    cursor: aiLoading ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  {aiLoading ? 'Analyzing...' : 'Get Framework Analysis'}
+                </button>
+              ) : (
                 <p className="text-xs mt-5 text-center" style={{ color: '#334155' }}>
                   Fill in the required fields to see your results
                 </p>

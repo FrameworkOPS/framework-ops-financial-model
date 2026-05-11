@@ -122,6 +122,11 @@ app.post('/api/analyze', async (req, res) => {
   let clientClosed = false;
   req.on('close', () => { clientClosed = true; });
 
+  // Keep connection alive while waiting for Anthropic (Railway idle timeout)
+  const keepalive = setInterval(() => {
+    if (!clientClosed && !res.writableEnded) res.write(': keepalive\n\n');
+  }, 2000);
+
   try {
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
@@ -130,6 +135,7 @@ app.post('/api/analyze', async (req, res) => {
       messages: [{ role: 'user', content: buildPrompt(industry, inputs, results) }],
     });
 
+    clearInterval(keepalive);
     const fullText = message.content[0]?.text ?? '';
     const words = fullText.split(/(\s+)/);
 
@@ -145,6 +151,7 @@ app.post('/api/analyze', async (req, res) => {
       res.end();
     }
   } catch (err) {
+    clearInterval(keepalive);
     if (!res.writableEnded) {
       res.write(`data: ${JSON.stringify({ error: err.message })}\n\n`);
       res.end();

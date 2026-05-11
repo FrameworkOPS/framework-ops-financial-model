@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --emerald: #10B981;
+  --emerald-dark: #059669;
+  --navy: #081B2F;
+  --navy-deep: #061220;
+  --offwhite: #F8FAFC;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  background-color: #061220;
+  color: #F8FAFC;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+@media print {
+  .no-print { display: none !important; }
+  .print-full { width: 100% !important; max-width: 100% !important; }
+  body { background: white; color: black; }
+  .recharts-responsive-container { break-inside: avoid; }
+}

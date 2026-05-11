@@ -1,0 +1,16 @@
+<svg width="1400" height="320" viewBox="0 0 1400 320" xmlns="http://www.w3.org/2000/svg">
+<rect width="1400" height="320" fill="transparent"/>
+<g transform="translate(40,60)">
+<rect x="0" y="0" width="42" height="42" rx="8" fill="#10B981"/>
+<rect x="56" y="0" width="42" height="42" rx="8" fill="#10B981"/>
+<rect x="112" y="0" width="42" height="42" rx="8" fill="#10B981"/>
+<rect x="0" y="56" width="42" height="42" rx="8" fill="#10B981"/>
+<rect x="56" y="56" width="42" height="42" rx="8" fill="#10B981"/>
+<circle cx="133" cy="77" r="7" fill="#10B981"/>
+<rect x="0" y="112" width="42" height="42" rx="8" fill="#10B981"/>
+<circle cx="77" cy="133" r="7" fill="#10B981"/>
+<circle cx="133" cy="133" r="7" fill="#10B981"/>
+</g>
+<text x="260" y="170" font-size="88" font-family="Arial" font-weight="700" fill="#081B2F">framework</text>
+<text x="860" y="170" font-size="88" font-family="Arial" font-weight="700" fill="#10B981">/ ops</text>
+</svg>

@@ -113,20 +113,6 @@ Give your top 3–5 insights about this home services scenario. Be specific to t
 
 app.post('/api/analyze', async (req, res) => {
   const { industry, inputs, results } = req.body;
-
-  res.setHeader('Content-Type', 'text/event-stream');
-  res.setHeader('Cache-Control', 'no-cache');
-  res.setHeader('Connection', 'keep-alive');
-  res.flushHeaders();
-
-  let clientClosed = false;
-  req.on('close', () => { clientClosed = true; });
-
-  // Keep connection alive while waiting for Anthropic (Railway idle timeout)
-  const keepalive = setInterval(() => {
-    if (!clientClosed && !res.writableEnded) res.write(': keepalive\n\n');
-  }, 2000);
-
   try {
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
@@ -134,28 +120,9 @@ app.post('/api/analyze', async (req, res) => {
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: buildPrompt(industry, inputs, results) }],
     });
-
-    clearInterval(keepalive);
-    const fullText = message.content[0]?.text ?? '';
-    const words = fullText.split(/(\s+)/);
-
-    for (const word of words) {
-      if (clientClosed || res.writableEnded) break;
-      res.write(`data: ${JSON.stringify({ text: word })}\n\n`);
-      if (typeof res.flush === 'function') res.flush();
-      await new Promise((r) => setTimeout(r, 18));
-    }
-
-    if (!clientClosed && !res.writableEnded) {
-      res.write('data: [DONE]\n\n');
-      res.end();
-    }
+    res.json({ text: message.content[0]?.text ?? '' });
   } catch (err) {
-    clearInterval(keepalive);
-    if (!res.writableEnded) {
-      res.write(`data: ${JSON.stringify({ error: err.message })}\n\n`);
-      res.end();
-    }
+    res.status(500).json({ error: err.message });
   }
 });
 

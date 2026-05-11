@@ -61,27 +61,15 @@ export default function App() {
 
       if (!response.ok) throw new Error(`Server error: ${response.status}`);
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
+      const data = await response.json();
+      if (data.error) { setAiError(data.error); return; }
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop();
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6).trim();
-            if (data === '[DONE]') break;
-            try {
-              const parsed = JSON.parse(data);
-              if (parsed.text) setAiText((prev) => prev + parsed.text);
-              if (parsed.error) setAiError(parsed.error);
-            } catch { /* skip */ }
-          }
-        }
+      setAiLoading(false);
+      const words = (data.text || '').split(/(\s+)/);
+      for (const word of words) {
+        if (controller.signal.aborted) break;
+        setAiText((prev) => prev + word);
+        await new Promise((r) => setTimeout(r, 18));
       }
     } catch (err) {
       if (err.name !== 'AbortError') {

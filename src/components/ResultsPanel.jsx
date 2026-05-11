@@ -3,6 +3,7 @@ import {
   Tooltip, ResponsiveContainer,
 } from 'recharts';
 import MetricCard from './MetricCard.jsx';
+import ProFormaStatement from './ProFormaStatement.jsx';
 
 const fmt = (n) => '$' + Math.round(n).toLocaleString();
 const pct = (n) => n.toFixed(1) + '%';
@@ -58,14 +59,18 @@ export function RecurringResults({ results, inputs }) {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-3">
-        <MetricCard label="Monthly Revenue (MRR)"  value={fmt(r.monthlyRevenue)}           status="neutral" />
-        <MetricCard label="Annual Revenue (ARR)"   value={fmt(r.annualRevenue)}             status="neutral" />
+        <MetricCard label="MRR"                    value={fmt(r.monthlyRevenue)}           status="neutral" />
+        <MetricCard label="ARR"                    value={fmt(r.annualRevenue)}             status="neutral" />
         <MetricCard label="Net Profit / Month"     value={fmt(r.netProfit)}                 status={r.netProfit < 0 ? 'red' : r.netMargin >= 20 ? 'green' : 'yellow'} />
         <MetricCard label="Net Margin"             value={pct(r.netMargin)}                 status={marginStatus(r.netMargin, 15, 20)} sub="Target: 20–30%" />
         <MetricCard label="Gross Margin"           value={pct(r.grossMargin)}               status={marginStatus(r.grossMargin, 40, 55)} sub="Target: 55–70%" />
         <MetricCard label="Contribution / Client"  value={fmt(r.contributionPerClient)}     status={r.contributionPerClient > 0 ? 'green' : 'red'} sub="per month" />
         <MetricCard label="Break-even Clients"     value={r.breakEvenClients.toLocaleString()} status="neutral" />
-        <MetricCard label={`Clients to Hit ${inputs.targetNetMarginPct}% Net`} value={r.targetClients.toLocaleString()} status={r.targetClients <= r.numClients ? 'green' : 'yellow'} sub={fmt(r.targetRevenue) + ' MRR'} />
+        <MetricCard label={`Clients for ${inputs.targetNetMarginPct}% Net`} value={r.targetClients.toLocaleString()} status={r.targetClients <= Number(inputs.numClients) ? 'green' : 'yellow'} sub={fmt(r.targetRevenue) + ' MRR'} />
+      </div>
+
+      <div className="rounded-xl p-5" style={{ background: '#061220', border: '1px solid #0d2540' }}>
+        <ProFormaStatement results={r} inputs={inputs} />
       </div>
 
       <div>

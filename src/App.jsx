@@ -21,7 +21,10 @@ const DEFAULT_HOME = {
 };
 const DEFAULT_RECURRING = {
   numClients: '', retainerRate: '', cogsPerClient: '0',
-  monthlyOverhead: '', targetNetMarginPct: '25',
+  targetNetMarginPct: '25',
+  overheadItems: [{ id: '1', label: '', amount: '' }],
+  hires: [],
+  scalingHires: [],
 };
 
 export default function App() {
@@ -45,6 +48,21 @@ export default function App() {
   const handleChange = useCallback((e) => {
     const { name, value } = e.target;
     setInputs((prev) => ({ ...prev, [name]: value }));
+  }, []);
+
+  const handleListAdd = useCallback((field, item) => {
+    setInputs((prev) => ({ ...prev, [field]: [...(prev[field] || []), item] }));
+  }, []);
+
+  const handleListUpdate = useCallback((field, index, updates) => {
+    setInputs((prev) => ({
+      ...prev,
+      [field]: prev[field].map((item, i) => (i === index ? { ...item, ...updates } : item)),
+    }));
+  }, []);
+
+  const handleListRemove = useCallback((field, index) => {
+    setInputs((prev) => ({ ...prev, [field]: prev[field].filter((_, i) => i !== index) }));
   }, []);
 
   const runAnalysis = useCallback(async (ind, inp, res) => {
@@ -161,7 +179,7 @@ export default function App() {
                 ? <GenericForm inputs={inputs} onChange={handleChange} />
                 : industry === 'home'
                 ? <HomeServicesForm inputs={inputs} onChange={handleChange} />
-                : <RecurringForm inputs={inputs} onChange={handleChange} />
+                : <RecurringForm inputs={inputs} onChange={handleChange} onListAdd={handleListAdd} onListUpdate={handleListUpdate} onListRemove={handleListRemove} />
               }
               {results ? (
                 <button

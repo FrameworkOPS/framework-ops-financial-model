@@ -123,28 +123,43 @@ CALCULATED RESULTS:
 
 Give your top 3–5 insights about this home services scenario. Be specific to the numbers. What's working, what's a problem, what should they change?`;
 
+  const overheadLines = (inputs.overheadItems || []).filter(i => i.label || i.amount)
+    .map(i => `  - ${i.label || 'Item'}: $${i.amount || 0}/mo`).join('\n') || '  (none entered)';
+  const hireLines = (inputs.hires || []).filter(h => h.role || h.monthlySalary)
+    .map(h => `  - ${h.role || 'Hire'}: $${h.monthlySalary || 0}/mo`).join('\n') || '  (none)';
+  const scalingLines = (inputs.scalingHires || []).filter(h => h.role || h.monthlySalary)
+    .map(h => `  - ${h.role || 'Role'}: $${h.monthlySalary || 0}/mo per ${h.clientsPerHire || '?'} clients (currently ${h.clientsPerHire > 0 ? Math.floor(Number(inputs.numClients) / h.clientsPerHire) : 0} hired)`).join('\n') || '  (none)';
+
   return `Analyze this recurring revenue / retainer business scenario:
 
 INPUTS:
 - Active clients: ${inputs.numClients}
 - Monthly retainer per client: $${inputs.retainerRate}
 - COGS per client / month: $${inputs.cogsPerClient || 0}
-- Monthly fixed overhead: $${inputs.monthlyOverhead}
 - Target net margin: ${inputs.targetNetMarginPct}%
 
-CALCULATED RESULTS:
-- Monthly Recurring Revenue (MRR): $${Math.round(results.monthlyRevenue).toLocaleString()}
-- Annual Recurring Revenue (ARR): $${Math.round(results.annualRevenue).toLocaleString()}
-- Total COGS: $${Math.round(results.totalCOGS).toLocaleString()}
-- Gross Profit: $${Math.round(results.grossProfit).toLocaleString()}
-- Gross Margin: ${results.grossMargin.toFixed(1)}%
-- Contribution per client / month: $${Math.round(results.contributionPerClient).toLocaleString()}
-- Net Profit: $${Math.round(results.netProfit).toLocaleString()}
-- Net Margin: ${results.netMargin.toFixed(1)}%
-- Break-even client count: ${results.breakEvenClients}
-- Clients needed to hit ${inputs.targetNetMarginPct}% net margin: ${results.targetClients} ($${Math.round(results.targetRevenue).toLocaleString()} MRR)
+OVERHEAD LINE ITEMS:
+${overheadLines}
 
-Give your top 3–5 insights about this recurring revenue scenario. Be specific to the numbers. What's working, what's at risk (including churn risk), and what should they focus on?`;
+KEY HIRES (fixed):
+${hireLines}
+
+SCALING HIRES (triggered by client count):
+${scalingLines}
+
+CALCULATED RESULTS:
+- MRR: $${Math.round(results.monthlyRevenue).toLocaleString()}
+- ARR: $${Math.round(results.annualRevenue).toLocaleString()}
+- Gross Profit: $${Math.round(results.grossProfit).toLocaleString()} (${results.grossMargin.toFixed(1)}% margin)
+- Fixed overhead total: $${Math.round(results.fixedOverheadTotal).toLocaleString()}/mo
+- Fixed hire cost: $${Math.round(results.fixedHireTotal).toLocaleString()}/mo
+- Scaling hire cost (current): $${Math.round(results.scalingCostCurrent).toLocaleString()}/mo
+- Total OpEx: $${Math.round(results.totalOpex).toLocaleString()}/mo
+- Net Profit: $${Math.round(results.netProfit).toLocaleString()} (${results.netMargin.toFixed(1)}% margin)
+- Break-even: ${results.breakEvenClients} clients
+- Target clients for ${inputs.targetNetMarginPct}% net: ${results.targetClients} ($${Math.round(results.targetRevenue).toLocaleString()} MRR)
+
+Give your top 3–5 insights. Cover: current health, churn risk, when the next scaling hire kicks in and its P&L impact, and the path to target margin. Be specific to the numbers.`;
 }
 
 app.post('/api/analyze', async (req, res) => {

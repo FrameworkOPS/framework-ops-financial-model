@@ -116,46 +116,86 @@ export function calculateRecurring(inputs) {
   const numClients = n(inputs.numClients);
   const retainerRate = n(inputs.retainerRate);
   const cogsPerClient = n(inputs.cogsPerClient);
-  const overhead = n(inputs.monthlyOverhead);
   const targetNet = n(inputs.targetNetMarginPct) / 100;
 
-  const monthlyRevenue = numClients * retainerRate;
-  const totalCOGS = numClients * cogsPerClient;
-  const grossProfit = monthlyRevenue - totalCOGS;
-  const grossMargin = monthlyRevenue > 0 ? (grossProfit / monthlyRevenue) * 100 : 0;
+  const overheadItems = inputs.overheadItems || [];
+  const hires = inputs.hires || [];
+  const scalingHires = inputs.scalingHires || [];
+
+  const fixedOverheadTotal = overheadItems.reduce((sum, item) => sum + n(item.amount), 0);
+  const fixedHireTotal = hires.reduce((sum, h) => sum + n(h.monthlySalary), 0);
+
+  function scalingCostAt(clients) {
+    return scalingHires.reduce((sum, h) => {
+      const perHire = n(h.clientsPerHire);
+      const count = perHire > 0 ? Math.floor(clients / perHire) : 0;
+      return sum + count * n(h.monthlySalary);
+    }, 0);
+  }
+
+  function calcAt(clients) {
+    const revenue = clients * retainerRate;
+    const cogs = clients * cogsPerClient;
+    const grossProfit = revenue - cogs;
+    const grossMargin = revenue > 0 ? (grossProfit / revenue) * 100 : 0;
+    const scalingCost = scalingCostAt(clients);
+    const totalOpex = fixedOverheadTotal + fixedHireTotal + scalingCost;
+    const netProfit = grossProfit - totalOpex;
+    const netMargin = revenue > 0 ? (netProfit / revenue) * 100 : 0;
+    const scalingBreakdown = scalingHires.map((h) => {
+      const perHire = n(h.clientsPerHire);
+      const count = perHire > 0 ? Math.floor(clients / perHire) : 0;
+      return { role: h.role || 'Unnamed', count, cost: count * n(h.monthlySalary), monthlySalary: n(h.monthlySalary), clientsPerHire: perHire };
+    });
+    return { revenue, cogs, grossProfit, grossMargin, scalingCost, totalOpex, netProfit, netMargin, scalingBreakdown };
+  }
+
+  const current = calcAt(numClients);
   const contributionPerClient = retainerRate - cogsPerClient;
   const contributionMarginPct = retainerRate > 0 ? (contributionPerClient / retainerRate) * 100 : 0;
-  const netProfit = grossProfit - overhead;
-  const netMargin = monthlyRevenue > 0 ? (netProfit / monthlyRevenue) * 100 : 0;
-  const annualRevenue = monthlyRevenue * 12;
+  const fixedCosts = fixedOverheadTotal + fixedHireTotal;
 
-  const breakEvenClients = contributionPerClient > 0 ? Math.ceil(overhead / contributionPerClient) : 0;
-  const breakEvenRevenue = breakEvenClients * retainerRate;
-
+  const breakEvenClients = contributionPerClient > 0 ? Math.ceil(fixedCosts / contributionPerClient) : 0;
   const denominator = contributionPerClient - retainerRate * targetNet;
-  const targetClients = denominator > 0 ? Math.ceil(overhead / denominator) : 0;
-  const targetRevenue = targetClients * retainerRate;
+  const targetClients = denominator > 0 ? Math.ceil(fixedCosts / denominator) : 0;
 
-  const maxClients = Math.max(numClients * 2, breakEvenClients * 1.5, targetClients * 1.2, 1);
+  // Pro forma scenarios: break-even, current, +5, +10, +25
+  const scenarioSet = new Set([breakEvenClients, numClients, numClients + 5, numClients + 10, numClients + 25].filter(c => c >= 0));
+  const proForma = [...scenarioSet].sort((a, b) => a - b).map((c) => ({ clients: c, ...calcAt(c) }));
+
+  const maxClients = Math.max(numClients * 2, breakEvenClients * 1.5, targetClients * 1.2, 10);
   const chartData = Array.from({ length: 11 }, (_, i) => {
     const c = Math.round((i / 10) * maxClients);
-    return {
-      clients: c,
-      revenue: Math.round(c * retainerRate),
-      totalCost: Math.round(c * cogsPerClient + overhead),
-    };
+    const s = calcAt(c);
+    return { clients: c, revenue: Math.round(s.revenue), totalCost: Math.round(s.cogs + s.totalOpex) };
   });
 
   return {
-    monthlyRevenue, totalCOGS, grossProfit, grossMargin,
-    contributionPerClient, contributionMarginPct,
-    netProfit, netMargin, annualRevenue,
-    breakEvenClients, breakEvenRevenue,
-    targetClients, targetRevenue,
+    monthlyRevenue: current.revenue,
+    annualRevenue: current.revenue * 12,
+    totalCOGS: current.cogs,
+    grossProfit: current.grossProfit,
+    grossMargin: current.grossMargin,
+    contributionPerClient,
+    contributionMarginPct,
+    netProfit: current.netProfit,
+    netMargin: current.netMargin,
+    fixedOverheadTotal,
+    fixedHireTotal,
+    scalingCostCurrent: current.scalingCost,
+    totalOpex: current.totalOpex,
+    breakEvenClients,
+    breakEvenRevenue: breakEvenClients * retainerRate,
+    targetClients,
+    targetRevenue: targetClients * retainerRate,
+    overheadItems,
+    hires,
+    scalingHires: current.scalingBreakdown,
+    proForma,
     chartData,
   };
 }
 
 export function isRecurringComplete(inputs) {
-  return n(inputs.numClients) > 0 && n(inputs.retainerRate) > 0 && n(inputs.monthlyOverhead) > 0;
+  return n(inputs.numClients) > 0 && n(inputs.retainerRate) > 0;
 }

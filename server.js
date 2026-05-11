@@ -113,29 +113,38 @@ Give your top 3–5 insights about this home services scenario. Be specific to t
 
 app.post('/api/analyze', async (req, res) => {
   const { industry, inputs, results } = req.body;
-  console.log('[analyze] request received, industry:', industry);
 
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
   res.flushHeaders();
 
+  let clientClosed = false;
+  req.on('close', () => { clientClosed = true; });
+
   try {
-    console.log('[analyze] calling Anthropic API...');
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 1024,
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: buildPrompt(industry, inputs, results) }],
     });
-    console.log('[analyze] got response, stop_reason:', message.stop_reason);
 
-    const text = message.content[0]?.text ?? '';
-    res.write(`data: ${JSON.stringify({ text })}\n\n`);
-    res.write('data: [DONE]\n\n');
-    res.end();
+    const fullText = message.content[0]?.text ?? '';
+    const words = fullText.split(/(\s+)/);
+
+    for (const word of words) {
+      if (clientClosed || res.writableEnded) break;
+      res.write(`data: ${JSON.stringify({ text: word })}\n\n`);
+      if (typeof res.flush === 'function') res.flush();
+      await new Promise((r) => setTimeout(r, 18));
+    }
+
+    if (!clientClosed && !res.writableEnded) {
+      res.write('data: [DONE]\n\n');
+      res.end();
+    }
   } catch (err) {
-    console.error('[analyze] error:', err.message);
     if (!res.writableEnded) {
       res.write(`data: ${JSON.stringify({ error: err.message })}\n\n`);
       res.end();

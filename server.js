@@ -113,6 +113,7 @@ Give your top 3–5 insights about this home services scenario. Be specific to t
 
 app.post('/api/analyze', async (req, res) => {
   const { industry, inputs, results } = req.body;
+  console.log('[analyze] request received, industry:', industry);
 
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
@@ -120,45 +121,22 @@ app.post('/api/analyze', async (req, res) => {
   res.flushHeaders();
 
   try {
-    const stream = client.messages.stream({
+    console.log('[analyze] calling Anthropic API...');
+    const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 1024,
       system: SYSTEM_PROMPT,
-      messages: [
-        {
-          role: 'user',
-          content: buildPrompt(industry, inputs, results),
-        },
-      ],
+      messages: [{ role: 'user', content: buildPrompt(industry, inputs, results) }],
     });
+    console.log('[analyze] got response, stop_reason:', message.stop_reason);
 
-    let clientClosed = false;
-    let streamDone = false;
-
-    req.on('close', () => {
-      clientClosed = true;
-      if (!streamDone) stream.abort();
-    });
-
-    stream.on('text', (text) => {
-      if (!clientClosed) {
-        res.write(`data: ${JSON.stringify({ text })}\n\n`);
-        if (typeof res.flush === 'function') res.flush();
-      }
-    });
-
-    await stream.finalMessage();
-    streamDone = true;
-
-    if (!clientClosed) {
-      res.write('data: [DONE]\n\n');
-      res.end();
-    }
+    const text = message.content[0]?.text ?? '';
+    res.write(`data: ${JSON.stringify({ text })}\n\n`);
+    res.write('data: [DONE]\n\n');
+    res.end();
   } catch (err) {
-    if (err.name === 'AbortError' || err.message?.includes('aborted')) return;
-    if (!res.headersSent) {
-      res.status(500).json({ error: err.message });
-    } else if (!res.writableEnded) {
+    console.error('[analyze] error:', err.message);
+    if (!res.writableEnded) {
       res.write(`data: ${JSON.stringify({ error: err.message })}\n\n`);
       res.end();
     }

@@ -1,14 +1,11 @@
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-import { config } from 'dotenv';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-config({ path: join(__dirname, '.env') });
-
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import Anthropic from '@anthropic-ai/sdk';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 3001;
 
@@ -174,6 +171,11 @@ app.use((req, res) => {
   res.sendFile(join(__dirname, 'dist', 'index.html'));
 });
 
+app.get('/api/health', (req, res) => {
+  res.json({ ok: true, hasKey: !!process.env.ANTHROPIC_API_KEY });
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`API key present: ${!!process.env.ANTHROPIC_API_KEY}`);
 });

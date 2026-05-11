@@ -93,7 +93,7 @@ CALCULATED RESULTS:
 Give your top 3–5 insights about this scenario. Be specific to the numbers. What's working, what's at risk, and what should they focus on?`;
   }
 
-  return `Analyze this home services business scenario:
+  if (industry === 'home') return `Analyze this home services business scenario:
 
 INPUTS:
 - Number of technicians: ${inputs.numTechs}

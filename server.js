@@ -165,14 +165,14 @@ app.post('/api/analyze', async (req, res) => {
   }
 });
 
+app.get('/api/health', (req, res) => {
+  res.json({ ok: true, hasKey: !!process.env.ANTHROPIC_API_KEY });
+});
+
 // Serve React build in production
 app.use(express.static(join(__dirname, 'dist')));
 app.use((req, res) => {
   res.sendFile(join(__dirname, 'dist', 'index.html'));
-});
-
-app.get('/api/health', (req, res) => {
-  res.json({ ok: true, hasKey: !!process.env.ANTHROPIC_API_KEY });
 });
 
 app.listen(PORT, () => {

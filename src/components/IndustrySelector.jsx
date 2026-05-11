@@ -21,7 +21,7 @@ export default function IndustrySelector({ onSelect }) {
         Select your business type to get started
       </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 w-full max-w-2xl">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 w-full max-w-4xl">
         {[
           {
             id: 'generic',
@@ -34,6 +34,12 @@ export default function IndustrySelector({ onSelect }) {
             icon: '🏠',
             title: 'Home Services',
             desc: 'Built for field service businesses. Model technician capacity, true labor cost, flat rate vs. hourly, and what rate hits your target margin.',
+          },
+          {
+            id: 'recurring',
+            icon: '🔁',
+            title: 'Recurring Revenue',
+            desc: 'Built for retainer and subscription businesses. Model clients × retainer rate against COGS and overhead to see MRR, ARR, and target client count.',
           },
         ].map((opt) => (
           <button

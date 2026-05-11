@@ -111,3 +111,51 @@ export function isHomeComplete(inputs) {
     n(inputs.monthlyOverhead) > 0
   );
 }
+
+export function calculateRecurring(inputs) {
+  const numClients = n(inputs.numClients);
+  const retainerRate = n(inputs.retainerRate);
+  const cogsPerClient = n(inputs.cogsPerClient);
+  const overhead = n(inputs.monthlyOverhead);
+  const targetNet = n(inputs.targetNetMarginPct) / 100;
+
+  const monthlyRevenue = numClients * retainerRate;
+  const totalCOGS = numClients * cogsPerClient;
+  const grossProfit = monthlyRevenue - totalCOGS;
+  const grossMargin = monthlyRevenue > 0 ? (grossProfit / monthlyRevenue) * 100 : 0;
+  const contributionPerClient = retainerRate - cogsPerClient;
+  const contributionMarginPct = retainerRate > 0 ? (contributionPerClient / retainerRate) * 100 : 0;
+  const netProfit = grossProfit - overhead;
+  const netMargin = monthlyRevenue > 0 ? (netProfit / monthlyRevenue) * 100 : 0;
+  const annualRevenue = monthlyRevenue * 12;
+
+  const breakEvenClients = contributionPerClient > 0 ? Math.ceil(overhead / contributionPerClient) : 0;
+  const breakEvenRevenue = breakEvenClients * retainerRate;
+
+  const denominator = contributionPerClient - retainerRate * targetNet;
+  const targetClients = denominator > 0 ? Math.ceil(overhead / denominator) : 0;
+  const targetRevenue = targetClients * retainerRate;
+
+  const maxClients = Math.max(numClients * 2, breakEvenClients * 1.5, targetClients * 1.2, 1);
+  const chartData = Array.from({ length: 11 }, (_, i) => {
+    const c = Math.round((i / 10) * maxClients);
+    return {
+      clients: c,
+      revenue: Math.round(c * retainerRate),
+      totalCost: Math.round(c * cogsPerClient + overhead),
+    };
+  });
+
+  return {
+    monthlyRevenue, totalCOGS, grossProfit, grossMargin,
+    contributionPerClient, contributionMarginPct,
+    netProfit, netMargin, annualRevenue,
+    breakEvenClients, breakEvenRevenue,
+    targetClients, targetRevenue,
+    chartData,
+  };
+}
+
+export function isRecurringComplete(inputs) {
+  return n(inputs.numClients) > 0 && n(inputs.retainerRate) > 0 && n(inputs.monthlyOverhead) > 0;
+}

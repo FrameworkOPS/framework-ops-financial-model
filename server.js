@@ -47,6 +47,19 @@ SALES & CONVERSION:
 - 30–40% conversion rate on qualified leads is a reasonable benchmark for home services.
 - If conversion rate is low, investigate: pricing too high vs. market, poor follow-up process, or not qualifying leads properly.
 
+RECURRING REVENUE / RETAINER BUSINESS BENCHMARKS:
+- Gross margin target: 55–70%. Below 40% means delivery costs are too high relative to retainer.
+- Net margin target: 20–30%. Healthy agencies run 25%+. Below 15% is a warning sign.
+- Contribution margin per client: if this is below $500/month, the retainer is too low or delivery cost is too high.
+- Break-even client count: if break-even is more than 70% of current clients, the business has almost no cushion.
+- Client concentration risk: if a single client represents more than 20% of MRR, that's a key-person risk that should be flagged.
+- Ideal client count for stability: 8–15 clients means losing one client is a 7–12% revenue hit. Under 5 clients is high risk.
+- Churn impact: calculate what losing 1 or 2 clients does to net margin — it's often more dramatic than owners realize.
+- ARR is the health metric — monthly can mask churn risk. Always express the annual run rate.
+- Overhead discipline: in recurring businesses, overhead tends to creep as the client base grows. If overhead exceeds 40% of revenue, it needs attention.
+- COGS creep: as you take on more clients with the same staff, COGS per client should decrease (scale leverage). If it's not, delivery is not systematized.
+- Pricing strategy: retainer rates should be reviewed annually. Most agency owners undercharge because they're afraid of losing clients. If net margin is above 30% and you're not fully staffed, raise rates.
+
 TOOL CONTEXT:
 - This tool is for education and scenario modeling. It helps business owners understand their numbers and explore "what if" scenarios.
 - You are NOT here to sell Framework Ops LLC services. Do not pitch or upsell.
@@ -109,6 +122,29 @@ CALCULATED RESULTS:
 - Recommended rate to hit target: $${Math.round(results.recommendedRate)} ${inputs.pricingModel === 'flat' ? 'per job' : 'per hour'}
 
 Give your top 3–5 insights about this home services scenario. Be specific to the numbers. What's working, what's a problem, what should they change?`;
+
+  return `Analyze this recurring revenue / retainer business scenario:
+
+INPUTS:
+- Active clients: ${inputs.numClients}
+- Monthly retainer per client: $${inputs.retainerRate}
+- COGS per client / month: $${inputs.cogsPerClient || 0}
+- Monthly fixed overhead: $${inputs.monthlyOverhead}
+- Target net margin: ${inputs.targetNetMarginPct}%
+
+CALCULATED RESULTS:
+- Monthly Recurring Revenue (MRR): $${Math.round(results.monthlyRevenue).toLocaleString()}
+- Annual Recurring Revenue (ARR): $${Math.round(results.annualRevenue).toLocaleString()}
+- Total COGS: $${Math.round(results.totalCOGS).toLocaleString()}
+- Gross Profit: $${Math.round(results.grossProfit).toLocaleString()}
+- Gross Margin: ${results.grossMargin.toFixed(1)}%
+- Contribution per client / month: $${Math.round(results.contributionPerClient).toLocaleString()}
+- Net Profit: $${Math.round(results.netProfit).toLocaleString()}
+- Net Margin: ${results.netMargin.toFixed(1)}%
+- Break-even client count: ${results.breakEvenClients}
+- Clients needed to hit ${inputs.targetNetMarginPct}% net margin: ${results.targetClients} ($${Math.round(results.targetRevenue).toLocaleString()} MRR)
+
+Give your top 3–5 insights about this recurring revenue scenario. Be specific to the numbers. What's working, what's at risk (including churn risk), and what should they focus on?`;
 }
 
 app.post('/api/analyze', async (req, res) => {

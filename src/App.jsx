@@ -3,11 +3,12 @@ import Logo from './components/Logo.jsx';
 import IndustrySelector from './components/IndustrySelector.jsx';
 import GenericForm from './components/GenericForm.jsx';
 import HomeServicesForm from './components/HomeServicesForm.jsx';
-import { GenericResults, HomeServicesResults } from './components/ResultsPanel.jsx';
+import RecurringForm from './components/RecurringForm.jsx';
+import { GenericResults, HomeServicesResults, RecurringResults } from './components/ResultsPanel.jsx';
 import AIRecommendations from './components/AIRecommendations.jsx';
 import {
-  calculateGeneric, calculateHomeServices,
-  isGenericComplete, isHomeComplete,
+  calculateGeneric, calculateHomeServices, calculateRecurring,
+  isGenericComplete, isHomeComplete, isRecurringComplete,
 } from './calculations.js';
 
 const DEFAULT_GENERIC = {
@@ -17,6 +18,10 @@ const DEFAULT_HOME = {
   numTechs: '', hoursPerWeek: '', techHourlyWage: '',
   materialCostPct: '20', monthlyOverhead: '', targetNetMarginPct: '15',
   pricingModel: 'flat', currentRate: '', avgJobDuration: '2',
+};
+const DEFAULT_RECURRING = {
+  numClients: '', retainerRate: '', cogsPerClient: '0',
+  monthlyOverhead: '', targetNetMarginPct: '25',
 };
 
 export default function App() {
@@ -31,7 +36,7 @@ export default function App() {
 
   const handleSelect = (type) => {
     setIndustry(type);
-    setInputs(type === 'generic' ? DEFAULT_GENERIC : DEFAULT_HOME);
+    setInputs(type === 'generic' ? DEFAULT_GENERIC : type === 'home' ? DEFAULT_HOME : DEFAULT_RECURRING);
     setResults(null);
     setAiText('');
     setAiError('');
@@ -82,10 +87,14 @@ export default function App() {
 
   useEffect(() => {
     if (!industry) return;
-    const isComplete = industry === 'generic' ? isGenericComplete(inputs) : isHomeComplete(inputs);
+    const isComplete = industry === 'generic' ? isGenericComplete(inputs)
+      : industry === 'home' ? isHomeComplete(inputs)
+      : isRecurringComplete(inputs);
     if (!isComplete) { setResults(null); return; }
 
-    const res = industry === 'generic' ? calculateGeneric(inputs) : calculateHomeServices(inputs);
+    const res = industry === 'generic' ? calculateGeneric(inputs)
+      : industry === 'home' ? calculateHomeServices(inputs)
+      : calculateRecurring(inputs);
     setResults(res);
 
     clearTimeout(debounceRef.current);
@@ -104,7 +113,6 @@ export default function App() {
 
   if (!industry) return <IndustrySelector onSelect={handleSelect} />;
 
-  const isGeneric = industry === 'generic';
 
   return (
     <div className="min-h-screen" style={{ background: '#061220' }}>
@@ -121,7 +129,7 @@ export default function App() {
           </button>
           <div className="h-4 w-px" style={{ background: '#102d4d' }} />
           <span className="text-sm font-medium" style={{ color: '#94a3b8' }}>
-            {isGeneric ? '📊 General Business Model' : '🏠 Home Services Model'}
+            {industry === 'generic' ? '📊 General Business Model' : industry === 'home' ? '🏠 Home Services Model' : '🔁 Recurring Revenue Model'}
           </span>
         </div>
         <button
@@ -138,7 +146,7 @@ export default function App() {
       {/* Print header */}
       <div className="hidden print:block p-6 border-b">
         <h1 className="text-2xl font-bold">
-          {isGeneric ? 'General Business Financial Model' : 'Home Services Financial Model'}
+          {industry === 'generic' ? 'General Business Financial Model' : industry === 'home' ? 'Home Services Financial Model' : 'Recurring Revenue Financial Model'}
         </h1>
         <p className="text-sm mt-1" style={{ color: '#64748b' }}>Framework Ops LLC — Financial Modeling Tool</p>
       </div>
@@ -149,9 +157,11 @@ export default function App() {
           <div className="lg:col-span-2 no-print">
             <div className="rounded-xl p-6" style={{ background: '#081B2F', border: '1px solid #102d4d' }}>
               <h2 className="text-xs font-semibold uppercase tracking-wider mb-5" style={{ color: '#475569' }}>Your Numbers</h2>
-              {isGeneric
+              {industry === 'generic'
                 ? <GenericForm inputs={inputs} onChange={handleChange} />
-                : <HomeServicesForm inputs={inputs} onChange={handleChange} />
+                : industry === 'home'
+                ? <HomeServicesForm inputs={inputs} onChange={handleChange} />
+                : <RecurringForm inputs={inputs} onChange={handleChange} />
               }
               {results ? (
                 <button
@@ -180,9 +190,11 @@ export default function App() {
               <>
                 <div className="rounded-xl p-6" style={{ background: '#081B2F', border: '1px solid #102d4d' }}>
                   <h2 className="text-xs font-semibold uppercase tracking-wider mb-5" style={{ color: '#475569' }}>Your Results</h2>
-                  {isGeneric
+                  {industry === 'generic'
                     ? <GenericResults results={results} inputs={inputs} />
-                    : <HomeServicesResults results={results} inputs={inputs} />
+                    : industry === 'home'
+                    ? <HomeServicesResults results={results} inputs={inputs} />
+                    : <RecurringResults results={results} inputs={inputs} />
                   }
                 </div>
                 <AIRecommendations text={aiText} loading={aiLoading} error={aiError} />

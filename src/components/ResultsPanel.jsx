@@ -53,6 +53,38 @@ export function GenericResults({ results }) {
   );
 }
 
+export function RecurringResults({ results, inputs }) {
+  const r = results;
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 gap-3">
+        <MetricCard label="Monthly Revenue (MRR)"  value={fmt(r.monthlyRevenue)}           status="neutral" />
+        <MetricCard label="Annual Revenue (ARR)"   value={fmt(r.annualRevenue)}             status="neutral" />
+        <MetricCard label="Net Profit / Month"     value={fmt(r.netProfit)}                 status={r.netProfit < 0 ? 'red' : r.netMargin >= 20 ? 'green' : 'yellow'} />
+        <MetricCard label="Net Margin"             value={pct(r.netMargin)}                 status={marginStatus(r.netMargin, 15, 20)} sub="Target: 20–30%" />
+        <MetricCard label="Gross Margin"           value={pct(r.grossMargin)}               status={marginStatus(r.grossMargin, 40, 55)} sub="Target: 55–70%" />
+        <MetricCard label="Contribution / Client"  value={fmt(r.contributionPerClient)}     status={r.contributionPerClient > 0 ? 'green' : 'red'} sub="per month" />
+        <MetricCard label="Break-even Clients"     value={r.breakEvenClients.toLocaleString()} status="neutral" />
+        <MetricCard label={`Clients to Hit ${inputs.targetNetMarginPct}% Net`} value={r.targetClients.toLocaleString()} status={r.targetClients <= r.numClients ? 'green' : 'yellow'} sub={fmt(r.targetRevenue) + ' MRR'} />
+      </div>
+
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: '#475569' }}>Revenue vs. Total Cost by Client Count</p>
+        <ResponsiveContainer width="100%" height={200}>
+          <LineChart data={r.chartData} margin={{ top: 5, right: 10, left: 5, bottom: 5 }}>
+            <CartesianGrid {...chartStyle.grid} />
+            <XAxis dataKey="clients" {...chartStyle.xAxis} label={{ value: 'Clients', position: 'insideBottom', offset: -2, fill: '#475569', fontSize: 11 }} />
+            <YAxis tickFormatter={(v) => '$' + (v / 1000).toFixed(0) + 'k'} {...chartStyle.yAxis} />
+            <Tooltip {...chartStyle.tooltip} formatter={(v) => fmt(v)} />
+            <Line type="monotone" dataKey="revenue"   stroke="#10B981" strokeWidth={2} dot={false} name="Revenue" />
+            <Line type="monotone" dataKey="totalCost" stroke="#f87171" strokeWidth={2} dot={false} name="Total Cost" />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
 export function HomeServicesResults({ results, inputs }) {
   const r = results;
   return (
